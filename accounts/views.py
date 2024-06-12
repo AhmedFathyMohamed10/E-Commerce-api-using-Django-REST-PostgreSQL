@@ -4,6 +4,10 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+# ------------------------------------------------------------
+from rest_framework.views import exception_handler
+# ------------------------------------------------------------
+
 from .serializers import UserSerializer, AuthTokenSerializer
 
 class RegisterView(APIView):
@@ -38,3 +42,12 @@ class LogoutView(APIView):
             return Response({'Logged Out': 'You are now logged out.'}, status=status.HTTP_200_OK)
         return Response({'error': 'User not authenticated'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+def custom_404_view(request, exception):
+    return Response(
+        {
+            "error": "Not Found",
+            "status_code": status.HTTP_404_NOT_FOUND
+        },
+        status=status.HTTP_404_NOT_FOUND
+    )
