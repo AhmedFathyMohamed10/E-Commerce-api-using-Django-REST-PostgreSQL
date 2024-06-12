@@ -57,10 +57,19 @@ class OrderSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             product = item_data['product']
             product_line = ProductLine.objects.get(product=product)  # Get the ProductLine associated with the product
+
+            # Check if the stock is sufficient
+            if product_line.stock < item_data['quantity']:
+                raise serializers.ValidationError(f"Insufficient stock for product {product.name}")
+
             item_price = product_line.price * item_data['quantity']  # Calculate the item price from the ProductLine
             item_data['price'] = item_price
             OrderItem.objects.create(order=order, **item_data)
             total_price += item_price
+
+            # Reduce the stock
+            product_line.stock -= item_data['quantity']
+            product_line.save()
 
         order.total_price = total_price
         order.save()
