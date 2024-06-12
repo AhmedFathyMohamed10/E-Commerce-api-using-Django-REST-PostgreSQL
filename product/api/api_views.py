@@ -1,6 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+# ----------------------- FILTERS UPDATED ----------------------
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import ProductFilter
 from product.models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
 
@@ -21,10 +24,26 @@ class CategoryList(APIView):
 
 # ---------------------------------------------------------------
 class ProductList(APIView):
+    filter_backends = [DjangoFilterBackend]
+
     def get(self, request, format=None):
-        products = Product.objects.all()
-        serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+        queryset = Product.objects.all()
+
+        # Apply filters
+        filterset = ProductFilter(request.GET, queryset=queryset)
+        if filterset.is_valid():
+            queryset = filterset.qs
+
+        filtered_count = queryset.count()
+        all_count = Product.objects.all().count()
+        message = f"We found {filtered_count} out of {all_count} products."
+
+        serializer = ProductSerializer(queryset, many=True)
+        response_data = {
+            'message': message,
+            'data': serializer.data
+        }
+        return Response(response_data)
 
     def post(self, request, format=None):
         serializer = ProductSerializer(data=request.data)
@@ -55,6 +74,8 @@ class ProductDetail(APIView):
 
     def delete(self, request, pk, format=None):
         product = self.get_object(pk)
+        if isinstance(product, Response):
+            return product
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 # ---------------------------------------------------------------
