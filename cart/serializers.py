@@ -2,18 +2,16 @@ from decimal import Decimal
 from rest_framework import serializers
 from .models import Cart
 from order.serializers import OrderSerializer
-from product.api.serializers import ProductSerializer
 
 class CartSerializer(serializers.ModelSerializer):
     orders = OrderSerializer(many=True, read_only=True)
     user = serializers.SerializerMethodField()
-    product = ProductSerializer(many=True, read_only=True)
     total_amount = serializers.SerializerMethodField()  # New field to hold the total amount
     total_after_discount = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
-        fields = ['user', 'orders', 'product','total_amount', 'total_after_discount']
+        fields = ['user', 'orders', 'total_amount', 'total_after_discount']
         read_only_fields = ['user', 'total_amount', 'total_after_discount']
 
     def get_total_amount(self, obj):

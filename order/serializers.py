@@ -3,6 +3,7 @@ from rest_framework import serializers
 from cart.models import Cart
 from product.models import ProductLine
 from .models import Order, OrderItem, ShippingAddress, OrderStatus
+from product.api.serializers import ProductSerializer
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,11 +23,13 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-
+    product = ProductSerializer(
+        read_only=True
+    )
     class Meta:
         model = OrderItem
         fields = ['product', 'quantity', 'price']
-        read_only_fields = ['price']
+        read_only_fields = ['price', 'product']
 
     def validate_quantity(self, value):
         if value <= 0:
