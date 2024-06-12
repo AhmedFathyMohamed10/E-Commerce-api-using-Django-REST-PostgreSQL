@@ -35,7 +35,7 @@ class ProductList(APIView):
             queryset = filterset.qs
 
         filtered_count = queryset.count()
-    all_count = Product.objects.all().count()
+        all_count = Product.objects.all().count()
         message = f"We found {filtered_count} out of {all_count} products."
 
         serializer = ProductSerializer(queryset, many=True)
