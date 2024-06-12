@@ -1,11 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Order
 from .serializers import OrderSerializer
 from django.http import Http404
 
 class OrderList(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         orders = Order.objects.filter(user=request.user)  # Filter orders by the authenticated user
         serializer = OrderSerializer(orders, many=True, context={'request': request})
@@ -19,6 +21,7 @@ class OrderList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetail(APIView):
+    permission_classes = [IsAuthenticated]
     def get_object(self, pk):
         try:
             return Order.objects.get(pk=pk, user=self.request.user)  # Ensure the order belongs to the authenticated user
