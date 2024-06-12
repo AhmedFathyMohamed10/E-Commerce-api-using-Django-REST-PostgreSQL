@@ -44,10 +44,4 @@ class LogoutView(APIView):
 
 
 def custom_404_view(request, exception):
-    return Response(
-        {
-            "error": "Not Found",
-            "status_code": status.HTTP_404_NOT_FOUND
-        },
-        status=status.HTTP_404_NOT_FOUND
-    )
+    return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
