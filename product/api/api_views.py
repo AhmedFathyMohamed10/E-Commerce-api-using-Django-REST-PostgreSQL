@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 # ----------------------- FILTERS UPDATED ----------------------
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import ProductFilter
 from product.models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
-
 # --------------------------------------------------------------
 class CategoryList(APIView):
     def get(self, request, format=None):
@@ -22,25 +22,26 @@ class CategoryList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # ---------------------------------------------------------------
 
+# -------------------------Pagination class----------------------
+class ProductPagination(PageNumberPagination):
+    page_size = 5
 # ---------------------------------------------------------------
+
 class ProductList(APIView):
     filter_backends = [DjangoFilterBackend]
+    pagination_class = ProductPagination
 
     def get(self, request, format=None):
-        queryset = Product.objects.all()
+        queryset = self.get_filtered_queryset(request)
 
-        # Apply filters
-        filterset = ProductFilter(request.GET, queryset=queryset)
-        if filterset.is_valid():
-            queryset = filterset.qs
-
-        filtered_count = queryset.count()
-        all_count = Product.objects.all().count()
-        message = f"We found {filtered_count} out of {all_count} products."
+        paginator = self.pagination_class()
+        paginated_queryset = paginator.paginate_queryset(queryset, request, view=self)
+        if paginated_queryset is not None:
+            serializer = ProductSerializer(paginated_queryset, many=True)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = ProductSerializer(queryset, many=True)
         response_data = {
-            'message': message,
             'data': serializer.data
         }
         return Response(response_data)
@@ -51,6 +52,14 @@ class ProductList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_filtered_queryset(self, request):
+        queryset = Product.objects.all()
+        filterset = ProductFilter(request.GET, queryset=queryset)
+        if filterset.is_valid():
+            queryset = filterset.qs
+        return queryset
+    
 
 class ProductDetail(APIView):
     def get_object(self, pk):
