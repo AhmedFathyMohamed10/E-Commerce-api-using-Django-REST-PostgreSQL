@@ -5,7 +5,7 @@ from reviews.serializers import ReviewSerializer
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = ['name']
 
     def validate_name(self, value):
         if not value.isalpha():
@@ -19,7 +19,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ProductLine
-        fields = ['id', 'category', 'price']
+        fields = ['category', 'price']
 
     def validate_price(self, value):
         if value < 0:
@@ -34,7 +34,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'image']
+        fields = ['image']
 
     def validate_image(self, value):
         if value.size > 5 * 1024 * 1024:  # 5MB
@@ -49,7 +49,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
 class ProductBrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductBrand
-        fields = ['id', 'brand']
+        fields = ['brand']
 
     def validate_brand(self, value):
         valid_brands = [choice[0] for choice in BRAND_CHOICES]
@@ -81,3 +81,4 @@ class ProductSerializer(serializers.ModelSerializer):
         if len(value) < 10:
             raise serializers.ValidationError("Product description should be at least 10 characters long.")
         return value
+        

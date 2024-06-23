@@ -1,3 +1,6 @@
+# ----------------- Caching ----------------
+from django.core.cache import cache
+# ------------------------------------------
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -32,7 +35,14 @@ class ProductList(APIView):
     pagination_class = ProductPagination
 
     def get(self, request, format=None):
-        queryset = self.get_filtered_queryset(request)
+        # Define cache key for the filtered queryset
+        cache_key = 'filtered_product_queryset'
+        queryset = cache.get(cache_key)
+
+        if not queryset:
+            queryset = self.get_filtered_queryset(request)
+            # Cache the queryset for 15 minutes (900 seconds)
+            cache.set(cache_key, queryset, timeout=900)
 
         paginator = self.pagination_class()
         paginated_queryset = paginator.paginate_queryset(queryset, request, view=self)
@@ -40,16 +50,16 @@ class ProductList(APIView):
             serializer = ProductSerializer(paginated_queryset, many=True)
             return paginator.get_paginated_response(serializer.data)
 
+
         serializer = ProductSerializer(queryset, many=True)
-        response_data = {
-            'data': serializer.data
-        }
-        return Response(response_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            # Clear cached queryset on POST request to ensure cache is updated
+            cache.delete('filtered_product_queryset') 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -83,8 +93,6 @@ class ProductDetail(APIView):
 
     def delete(self, request, pk, format=None):
         product = self.get_object(pk)
-        if isinstance(product, Response):
-            return product
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 # ---------------------------------------------------------------
