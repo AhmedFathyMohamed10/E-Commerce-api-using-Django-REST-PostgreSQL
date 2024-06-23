@@ -20,6 +20,19 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     
+    # --------------- Calculate stars on the fly --------------
+    def total_stars(self):
+        return self.reviews.aggregate(total=models.Sum('stars'))['total'] or 0
+
+    def review_count(self):
+        return self.reviews.count()
+
+    def average_stars(self):
+        review_count = self.review_count()
+        if review_count > 0:
+            return self.total_stars() / review_count
+        return 0
+    
 
 class ProductLine(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

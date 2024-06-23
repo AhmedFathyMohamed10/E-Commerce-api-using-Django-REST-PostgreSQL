@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from product.models import BRAND_CHOICES, Category, Product, ProductLine, ProductImage, ProductBrand
+from reviews.serializers import ReviewSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,10 +66,11 @@ class ProductSerializer(serializers.ModelSerializer):
     product_lines = ProductLineSerializer(source='productline_set', many=True, read_only=True)
     product_images = ProductImageSerializer(source='productimage_set', many=True, read_only=True)
     product_brands = ProductBrandSerializer(source='productbrand_set', many=True, read_only=True)
+    reviews = ReviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'p_type', 'product_lines', 'product_images', 'product_brands']
+        fields = ['id', 'name', 'description', 'p_type', 'product_lines', 'product_images', 'product_brands', 'reviews']
 
     def validate_name(self, value):
         if len(value) < 3:
